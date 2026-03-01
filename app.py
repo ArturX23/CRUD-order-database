@@ -77,13 +77,48 @@ def add_order(conn, order_data):
     ) VALUES (?, ?, ?, ?, ?, ?, ?)'''
         cursor.execute(sql_insert_order, order_details)
         conn.commit()
+        return cursor.lastrowid
     except Error as e:
         print(e)
 
+def get_orders_by_client(conn, client_id):
+    try:
+        cursor = conn.cursor()
+        sql_select_orders_by_client = '''SELECT * FROM orders WHERE client_id = ?'''
+        cursor.execute(sql_select_orders_by_client, (client_id,))
+        results = cursor.fetchall()
+        return results
+    except Error as e:
+        print(e)
 
 if __name__ == '__main__':
    conn = create_connection(r"database.db")
    create_clients_table(conn)
    create_orders_table(conn)
+   # 3️⃣ dane klienta
+   client_data = {
+       "name": "Brad",
+       "second_name": "Pitt",
+       "address": "Miami 234"
+   }
+
+   # 4️⃣ dodanie klienta i pobranie jego ID
+   client_id = add_client(conn, client_data)
+
+   # 5️⃣ dane zamówienia z ID klienta
+   order_data = {
+       "client_id": client_id,
+       "product_name": "sugar",
+       "quantity": 1,
+       "product_description": "alcohol",
+       "product_price": 2.0,
+       "order_date": "2023-10-01",
+       "payment_status": "finished"
+   }
+
+   # 6️⃣ dodanie zamówienia
+   order_id = add_order(conn, order_data)
+
+   # 7️⃣ zamknięcie połączenia
    conn.close()
 

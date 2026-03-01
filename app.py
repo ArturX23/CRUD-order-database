@@ -91,6 +91,20 @@ def get_orders_by_client(conn, client_id):
     except Error as e:
         print(e)
 
+def update_payment_status(conn, order_id, updated_payment_status):
+    try:
+        cursor = conn.cursor()
+        sql_update_payment_status = '''
+        UPDATE orders 
+        SET payment_status = ? 
+        WHERE id = ?
+        '''
+        cursor.execute(sql_update_payment_status, (updated_payment_status, order_id))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Error as e:
+        print(e)
+
 if __name__ == '__main__':
    conn = create_connection(r"database.db")
    create_clients_table(conn)
@@ -120,5 +134,13 @@ if __name__ == '__main__':
    order_id = add_order(conn, order_data)
 
    # 7️⃣ zamknięcie połączenia
+
+   result = update_payment_status(conn, 5, "paid")
+
+   if result == 50:
+       print("Status zamówienia został zaktualizowany")
+   else:
+       print("Nie znaleziono zamówienia o podanym ID")
+
    conn.close()
 

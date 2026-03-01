@@ -2,6 +2,9 @@ import sqlite3
 from sqlite3 import Error
 
 def create_connection(db_file):
+    '''utility function to create
+    a database connection to
+    the SQLite database'''
     conn = None
     try:
         conn = sqlite3.connect(db_file)
@@ -14,6 +17,7 @@ def create_connection(db_file):
             print(e)
 
 def create_clients_table(conn):
+    '''utility function to create clients table'''
     cursor = conn.cursor()
     sql_create_clients_table = '''CREATE TABLE IF NOT EXISTS clients (
         id INTEGER PRIMARY KEY, 
@@ -25,6 +29,7 @@ def create_clients_table(conn):
     conn.commit()
 
 def create_orders_table(conn):
+    '''utility function to create orders table'''
     cursor = conn.cursor()
     sql_create_orders_table = '''CREATE TABLE IF NOT EXISTS orders (
         id INTEGER PRIMARY KEY,
@@ -40,6 +45,7 @@ def create_orders_table(conn):
     conn.commit()
 
 def add_client(conn, client_data):
+    '''utility function to add client'''
     try:
         client_details = (client_data['name'],
                           client_data['second_name'],
@@ -57,6 +63,7 @@ def add_client(conn, client_data):
         print(e)
 
 def add_order(conn, order_data):
+    '''utility function to add order'''
     try:
         order_details = (order_data['client_id'],
                          order_data['product_name'],
@@ -82,6 +89,7 @@ def add_order(conn, order_data):
         print(e)
 
 def get_orders_by_client(conn, client_id):
+    '''utility function to get orders by client'''
     try:
         cursor = conn.cursor()
         sql_select_orders_by_client = '''SELECT * FROM orders WHERE client_id = ?'''
@@ -92,6 +100,7 @@ def get_orders_by_client(conn, client_id):
         print(e)
 
 def update_payment_status(conn, order_id, updated_payment_status):
+    '''utility function to update payment status'''
     try:
         cursor = conn.cursor()
         sql_update_payment_status = '''
@@ -105,42 +114,63 @@ def update_payment_status(conn, order_id, updated_payment_status):
     except Error as e:
         print(e)
 
+def delete_order(conn, order_id):
+    '''utility function to delete order'''
+    try:
+        cursor = conn.cursor()
+        sql_delete_order = '''
+        DELETE FROM orders 
+        WHERE id = ?
+        '''
+        cursor.execute(sql_delete_order, (order_id,))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Error as e:
+        print(e)
+
 if __name__ == '__main__':
+
    conn = create_connection(r"database.db")
    create_clients_table(conn)
    create_orders_table(conn)
-   # 3️⃣ dane klienta
+
+   # client details
    client_data = {
        "name": "Brad",
        "second_name": "Pitt",
        "address": "Miami 234"
    }
 
-   # 4️⃣ dodanie klienta i pobranie jego ID
+   # add client
    client_id = add_client(conn, client_data)
 
-   # 5️⃣ dane zamówienia z ID klienta
+   # order details
    order_data = {
        "client_id": client_id,
        "product_name": "sugar",
        "quantity": 1,
        "product_description": "alcohol",
        "product_price": 2.0,
-       "order_date": "2023-10-01",
-       "payment_status": "finished"
+       "order_date": "2023-10-01 00:00:00",
+       "payment_status": "paid"
    }
 
-   # 6️⃣ dodanie zamówienia
+   # add order
    order_id = add_order(conn, order_data)
 
-   # 7️⃣ zamknięcie połączenia
-
+   # UPDATE
    result = update_payment_status(conn, 5, "paid")
-
    if result == 50:
        print("Status zamówienia został zaktualizowany")
    else:
        print("Nie znaleziono zamówienia o podanym ID")
 
+   # DELETE
+   if delete_order(conn, 3):
+       print("Zamówienie usunięte")
+   else:
+       print("Nie znaleziono zamówienia o podanym ID")
+
+   # close connection
    conn.close()
 
